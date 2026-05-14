@@ -10,6 +10,7 @@ protocol RemotePipelineManaging: AnyObject {
 
 final class RemotePipelineManager: RemotePipelineManaging, Injectable {
     @Injected() private var reachabilityManager: ReachabilityManager!
+    @Injected() var glucoseStorage: GlucoseStorage!
 
     /// Registered targets. Must be populated via `register(target:)` before calling `start()`.
     /// Not safe to modify after `start()` is called.
@@ -18,7 +19,7 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
     /// The number of registered targets. Exposed for testability.
     var registeredTargetCount: Int { targets.count }
 
-    private var subscriptions = Set<AnyCancellable>()
+    var subscriptions = Set<AnyCancellable>()
 
     private var pipelineSubjects: [UploadPipeline: PassthroughSubject<Void, Never>] = {
         var d: [UploadPipeline: PassthroughSubject<Void, Never>] = [:]
@@ -26,7 +27,7 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
         return d
     }()
 
-    private let pipelineQueue = DispatchQueue(label: "RemotePipelineManager.pipelines", qos: .utility)
+    let pipelineQueue = DispatchQueue(label: "RemotePipelineManager.pipelines", qos: .utility)
 
     /// Real-time pipelines get a 2-second throttle; batched pipelines get 30 seconds.
     private let throttleIntervals: [UploadPipeline: TimeInterval] = [
@@ -51,6 +52,7 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
 
     func start() {
         setupPipelineThrottles()
+        wireSubscribers()
     }
 
     // MARK: - Private
