@@ -11,7 +11,13 @@ protocol RemotePipelineManaging: AnyObject {
 final class RemotePipelineManager: RemotePipelineManaging, Injectable {
     @Injected() private var reachabilityManager: ReachabilityManager!
 
-    private(set) var targets: [any RemoteTargetWriter] = []
+    /// Registered targets. Must be populated via `register(target:)` before calling `start()`.
+    /// Not safe to modify after `start()` is called.
+    private var targets: [any RemoteTargetWriter] = []
+
+    /// The number of registered targets. Exposed for testability.
+    var registeredTargetCount: Int { targets.count }
+
     private var subscriptions = Set<AnyCancellable>()
 
     private var pipelineSubjects: [UploadPipeline: PassthroughSubject<Void, Never>] = {
@@ -20,7 +26,7 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
         return d
     }()
 
-    let pipelineQueue = DispatchQueue(label: "RemotePipelineManager.pipelines", qos: .utility)
+    private let pipelineQueue = DispatchQueue(label: "RemotePipelineManager.pipelines", qos: .utility)
 
     /// Real-time pipelines get a 2-second throttle; batched pipelines get 30 seconds.
     private let throttleIntervals: [UploadPipeline: TimeInterval] = [
@@ -83,6 +89,8 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
         case .glucose:
             try await target.upload(glucose: [])
         case .manualGlucose:
+            // TODO: Add distinct upload(manualGlucose:) method to RemoteTargetWriter
+            // when future targets need to distinguish CGM from manual glucose
             try await target.upload(glucose: [])
         case .carbs:
             try await target.upload(carbs: [])

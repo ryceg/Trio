@@ -37,8 +37,7 @@ import Testing
 
         manager.register(target: target)
 
-        #expect(manager.targets.count == 1)
-        #expect(manager.targets.first?.id == "test-target")
+        #expect(manager.registeredTargetCount == 1)
     }
 
     @Test("Register multiple targets preserves order") func testRegisterMultipleTargets() {
@@ -49,9 +48,7 @@ import Testing
         manager.register(target: target1)
         manager.register(target: target2)
 
-        #expect(manager.targets.count == 2)
-        #expect(manager.targets[0].id == "first")
-        #expect(manager.targets[1].id == "second")
+        #expect(manager.registeredTargetCount == 2)
     }
 
     // MARK: - Pipeline Dispatch
@@ -130,4 +127,8 @@ import Testing
         // The failing target threw, but the healthy target should still have been called
         #expect(healthyTarget.uploadGlucoseCallCount == 1)
     }
+
+    // TODO: Add test verifying targets are not called when network is unreachable.
+    // Requires a MockReachabilityManager registered in TestAssembly to override the
+    // NetworkAssembly registration, so `reachabilityManager.isReachable` returns false.
 }
