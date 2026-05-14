@@ -85,7 +85,10 @@ extension Notification.Name {
             _ = resolver.resolve(LiveActivityManager.self)!
         }
         _ = resolver.resolve(IOBService.self)!
-    }
+
+        if let pipelineManager = resolver.resolve(RemotePipelineManaging.self) as? RemotePipelineManager {
+            pipelineManager.start()
+        }
 
     init() {
         FileProtectionFixer.fixFlagFileProtectionForPropertyPersistentFlags() // TODO: ‼️ REMOVE ME BEFORE PUBLIC BETA / RELEASE
