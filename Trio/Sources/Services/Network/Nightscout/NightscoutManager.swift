@@ -118,6 +118,11 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         settingsManager.settings.uploadGlucose
     }
 
+    /// Whether a Nightscout URL and API secret are configured in the keychain.
+    var isNightscoutConfigured: Bool {
+        nightscoutAPI != nil
+    }
+
     private var nightscoutAPI: NightscoutAPI? {
         guard let urlString = keychain.getValue(String.self, forKey: NightscoutConfig.Config.urlKey),
               let url = URL(string: urlString),
