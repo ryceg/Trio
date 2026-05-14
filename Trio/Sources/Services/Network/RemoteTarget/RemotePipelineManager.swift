@@ -6,6 +6,7 @@ import Swinject
 protocol RemotePipelineManaging: AnyObject {
     func register(target: any RemoteTargetWriter)
     func requestUpload(_ pipeline: UploadPipeline)
+    func start()
 }
 
 final class RemotePipelineManager: RemotePipelineManaging, Injectable {
@@ -52,7 +53,12 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
 
     func start() {
         setupPipelineThrottles()
-        wireSubscribers()
+        // NOTE: Subscriber wiring is intentionally deferred. The existing
+        // BaseNightscoutManager subscribes to Core Data changes directly.
+        // Enabling wireSubscribers() here would cause double uploads to
+        // Nightscout. This will be activated when the legacy subscriber
+        // path in BaseNightscoutManager is removed.
+        // wireSubscribers()
     }
 
     // MARK: - Private
@@ -102,8 +108,10 @@ final class RemotePipelineManager: RemotePipelineManaging, Injectable {
             try await target.upload(determinations: [])
         case .overrides:
             try await target.upload(overrides: [])
+            try await target.upload(overrideRuns: [])
         case .tempTargets:
             try await target.upload(tempTargets: [])
+            try await target.upload(tempTargetRuns: [])
         }
     }
 }
